@@ -1,0 +1,1 @@
+package com.flowdesk.ticket; import org.springframework.data.jpa.repository.JpaRepository; import java.util.*; public interface TicketAuditRepository extends JpaRepository<TicketAudit,Long>{List<TicketAudit> findByTicketNumberOrderByOccurredAtDesc(String ticketNumber);}

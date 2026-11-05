@@ -1,0 +1,3 @@
+package com.flowdesk.ticket;
+import java.time.Instant;
+public record TicketView(long id,String ticketNumber,String title,String description,String category,String priority,String status,String creator,String assignee,Instant createdAt,Instant updatedAt,Instant slaDueAt,Instant completedAt,long version,boolean slaBreached){static TicketView from(Ticket t,Instant now){return new TicketView(t.getId(),t.getTicketNumber(),t.getTitle(),t.getDescription(),t.getCategory(),t.getPriority(),t.getStatus(),t.getCreatedBy().getUsername(),t.getAssignee()==null?null:t.getAssignee().getUsername(),t.getCreatedAt(),t.getUpdatedAt(),t.getSlaDueAt(),t.getCompletedAt(),t.getVersion(),t.isSlaBreached(now));}}
