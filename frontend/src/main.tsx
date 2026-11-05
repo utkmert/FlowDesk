@@ -1,0 +1,2 @@
+import React from 'react';import ReactDOM from 'react-dom/client';import {ConfigProvider} from 'antd';import trTR from 'antd/locale/tr_TR';import App from './App';import './styles.css';
+ReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><ConfigProvider locale={trTR} theme={{token:{colorPrimary:'#176b87',borderRadius:10,fontFamily:'Inter, system-ui, sans-serif',colorBgLayout:'#f3f6f8'}}}><App/></ConfigProvider></React.StrictMode>);
