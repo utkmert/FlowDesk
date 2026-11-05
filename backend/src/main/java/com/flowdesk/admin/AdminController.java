@@ -1,0 +1,10 @@
+package com.flowdesk.admin;
+import com.flowdesk.security.*;import com.flowdesk.core.*;import jakarta.validation.Valid;import jakarta.validation.constraints.*;import org.springframework.security.access.prepost.PreAuthorize;import org.springframework.security.crypto.password.PasswordEncoder;import org.springframework.web.bind.annotation.*;import java.util.*;
+@RestController @RequestMapping("/api/v1/admin") @PreAuthorize("hasRole('ADMIN')") public class AdminController {
+ private final UserRepository users;private final PasswordEncoder encoder;public AdminController(UserRepository u,PasswordEncoder e){users=u;encoder=e;}
+ @GetMapping("/users") public List<UserView> users(){return users.findAll().stream().map(u->new UserView(u.getId(),u.getUsername(),u.getFullName(),u.isActive(),u.getRoles())).toList();}
+ @PostMapping("/users") public UserView create(@Valid @RequestBody NewUser r){if(users.findByUsername(r.username()).isPresent())throw new ConflictException("Kullanıcı adı zaten kullanımda.");var u=users.save(new UserAccount(r.username(),r.fullName(),encoder.encode(r.password()),Set.of(r.role())));return new UserView(u.getId(),u.getUsername(),u.getFullName(),u.isActive(),u.getRoles());}
+ @PatchMapping("/users/{id}/active") public UserView active(@PathVariable long id,@RequestBody Active r){var u=users.findById(id).orElseThrow(NotFoundException::new);u.setActive(r.active());return new UserView(u.getId(),u.getUsername(),u.getFullName(),u.isActive(),u.getRoles());}
+ @PatchMapping("/users/{id}/roles") public UserView role(@PathVariable long id,@Valid @RequestBody Role r){var u=users.findById(id).orElseThrow(NotFoundException::new);u.setRoles(Set.of(r.role()));return new UserView(u.getId(),u.getUsername(),u.getFullName(),u.isActive(),u.getRoles());}
+ public record NewUser(@NotBlank String username,@NotBlank String fullName,@NotBlank @Size(min=12)String password,@Pattern(regexp="ADMIN|MANAGER|EMPLOYEE|AUDITOR")String role){} public record Active(boolean active){}public record Role(@Pattern(regexp="ADMIN|MANAGER|EMPLOYEE|AUDITOR")String role){}public record UserView(long id,String username,String fullName,boolean active,Set<String> roles){}
+}

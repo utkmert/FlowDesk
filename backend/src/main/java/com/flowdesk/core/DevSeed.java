@@ -1,0 +1,13 @@
+package com.flowdesk.core;
+import com.flowdesk.security.*; import org.springframework.boot.*; import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty; import org.springframework.context.annotation.Bean; import org.springframework.jdbc.core.JdbcTemplate; import org.springframework.security.crypto.password.PasswordEncoder; import java.time.*; import java.sql.Timestamp; import java.util.*;
+@org.springframework.context.annotation.Configuration @ConditionalOnProperty(name="app.dev-seed",havingValue="true") public class DevSeed {
+ @Bean CommandLineRunner seed(UserRepository users,PasswordEncoder encoder,JdbcTemplate jdbc,Clock clock){return args->{
+  Map<String,String> spec=new LinkedHashMap<>();spec.put("admin","ADMIN");spec.put("manager1","MANAGER");spec.put("manager2","MANAGER");for(int i=1;i<=5;i++)spec.put("employee"+i,"EMPLOYEE");spec.put("auditor","AUDITOR");
+  for(var e:spec.entrySet())if(users.findByUsername(e.getKey()).isEmpty()){String display=e.getKey().substring(0,1).toUpperCase()+e.getKey().substring(1);users.save(new UserAccount(e.getKey(),"Demo "+display,encoder.encode("FlowDesk123!"),Set.of(e.getValue())));}
+  if(jdbc.queryForObject("select count(*) from tickets where ticket_number like 'FD-DEMO-%'",Long.class)>0)return;
+  var names=List.of("Bilgi Teknolojileri","İnsan Kaynakları","Satın Alma","Mali İşler","Tesis Yönetimi","Hukuk","İletişim","Operasyon");var statuses=List.of("OPEN","ASSIGNED","IN_PROGRESS","PENDING_APPROVAL","COMPLETED","CANCELLED");var priorities=List.of("P1","P2","P3");Instant now=clock.instant();
+  for(int i=1;i<=50;i++){String no=String.format("FD-DEMO-%04d",i),priority=priorities.get(i%3),status=statuses.get(i%6),creator="employee"+((i%5)+1),assignee=(status.equals("OPEN")||status.equals("CANCELLED"))?null:"employee"+(((i+1)%5)+1);Instant created=now.minus(Duration.ofHours(i*6L));Instant due=created.plus(Duration.ofHours(priority.equals("P1")?4:priority.equals("P2")?24:72));Instant completed=status.equals("COMPLETED")?created.plus(Duration.ofHours(2)):null;
+   jdbc.update("insert into tickets(ticket_number,title,description,category,priority,status,created_by,assignee_id,created_at,updated_at,sla_due_at,completed_at,version) values (?,?,?,?,?,?,?,?,?,?,?,?,0)",no,"Demo talep "+i,"Sentetik eğitim verisi: operasyonel iş talebi "+i,names.get(i%8),priority,status,users.findByUsername(creator).orElseThrow().getId(),assignee==null?null:users.findByUsername(assignee).orElseThrow().getId(),Timestamp.from(created),Timestamp.from(created),Timestamp.from(due),completed==null?null:Timestamp.from(completed));
+  }
+ };}
+}

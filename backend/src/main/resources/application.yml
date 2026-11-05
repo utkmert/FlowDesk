@@ -1,0 +1,21 @@
+spring:
+  application.name: flowdesk
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/flowdesk}
+    username: ${SPRING_DATASOURCE_USERNAME:flowdesk}
+    password: ${SPRING_DATASOURCE_PASSWORD:flowdesk}
+  jpa:
+    hibernate.ddl-auto: validate
+    open-in-view: false
+    properties.hibernate.jdbc.time_zone: UTC
+  flyway.enabled: true
+server:
+  port: 8080
+  servlet.session.cookie.http-only: true
+  servlet.session.cookie.same-site: lax
+management:
+  endpoints.web.exposure.include: health
+springdoc.swagger-ui.path: /swagger-ui.html
+app:
+  dev-seed: ${APP_DEV_SEED:false}
+  csrf-cookie: XSRF-TOKEN

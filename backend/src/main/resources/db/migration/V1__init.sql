@@ -1,0 +1,17 @@
+CREATE TABLE users (id BIGSERIAL PRIMARY KEY, username VARCHAR(80) NOT NULL UNIQUE, full_name VARCHAR(160) NOT NULL, password_hash VARCHAR(100) NOT NULL, active BOOLEAN NOT NULL DEFAULT TRUE);
+CREATE TABLE roles (name VARCHAR(30) PRIMARY KEY);
+INSERT INTO roles(name) VALUES ('ADMIN'),('MANAGER'),('EMPLOYEE'),('AUDITOR');
+CREATE TABLE user_roles (user_id BIGINT NOT NULL REFERENCES users(id), role_name VARCHAR(30) NOT NULL REFERENCES roles(name), PRIMARY KEY(user_id,role_name));
+CREATE TABLE categories (name VARCHAR(80) PRIMARY KEY, active BOOLEAN NOT NULL DEFAULT TRUE);
+INSERT INTO categories(name) VALUES ('Bilgi Teknolojileri'),('İnsan Kaynakları'),('Satın Alma'),('Mali İşler'),('Tesis Yönetimi'),('Hukuk'),('İletişim'),('Operasyon');
+CREATE TABLE tickets (id BIGSERIAL PRIMARY KEY, ticket_number VARCHAR(24) NOT NULL UNIQUE, title VARCHAR(180) NOT NULL, description TEXT NOT NULL, category VARCHAR(80) NOT NULL REFERENCES categories(name), priority VARCHAR(2) NOT NULL CHECK(priority IN ('P1','P2','P3')), status VARCHAR(32) NOT NULL CHECK(status IN ('OPEN','ASSIGNED','IN_PROGRESS','PENDING_APPROVAL','COMPLETED','CANCELLED')), created_by BIGINT NOT NULL REFERENCES users(id), assignee_id BIGINT REFERENCES users(id), created_at TIMESTAMPTZ NOT NULL, updated_at TIMESTAMPTZ NOT NULL, sla_due_at TIMESTAMPTZ NOT NULL, completed_at TIMESTAMPTZ, version BIGINT NOT NULL DEFAULT 0);
+CREATE INDEX idx_tickets_queue ON tickets(priority,sla_due_at,created_at,id);
+CREATE INDEX idx_tickets_status ON tickets(status);
+CREATE INDEX idx_tickets_assignee_status ON tickets(assignee_id,status);
+CREATE INDEX idx_tickets_creator ON tickets(created_by,created_at DESC);
+CREATE TABLE ticket_comments (id BIGSERIAL PRIMARY KEY, ticket_id BIGINT NOT NULL REFERENCES tickets(id), author_id BIGINT NOT NULL REFERENCES users(id), body TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL);
+CREATE TABLE ticket_audit_logs (id BIGSERIAL PRIMARY KEY, ticket_number VARCHAR(24) NOT NULL, action VARCHAR(40) NOT NULL, actor VARCHAR(80) NOT NULL, occurred_at TIMESTAMPTZ NOT NULL, previous_value TEXT, new_value TEXT, reason TEXT);
+CREATE INDEX idx_audit_ticket_time ON ticket_audit_logs(ticket_number,occurred_at DESC);
+CREATE TABLE notifications (id BIGSERIAL PRIMARY KEY, username VARCHAR(80) NOT NULL REFERENCES users(username), type VARCHAR(40) NOT NULL, message VARCHAR(500) NOT NULL, ticket_number VARCHAR(24) NOT NULL, created_at TIMESTAMPTZ NOT NULL, is_read BOOLEAN NOT NULL DEFAULT FALSE);
+CREATE INDEX idx_notification_user_time ON notifications(username,created_at DESC);
+CREATE UNIQUE INDEX uq_notification_sla ON notifications(type,ticket_number) WHERE type='SLA_BREACH';
