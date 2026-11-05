@@ -1,0 +1,11 @@
+* text=auto
+
+# Linux/Maven and container scripts require LF endings.
+backend/mvnw text eol=lf
+*.sh text eol=lf
+
+# Windows command wrappers keep CRLF endings.
+*.cmd text eol=crlf
+
+# Keep the README screenshot byte-for-byte.
+*.png binary

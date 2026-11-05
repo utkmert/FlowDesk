@@ -1,0 +1,14 @@
+.env
+.idea/
+.vscode/
+target/
+node_modules/
+dist/
+playwright-report/
+test-results/
+*.log
+*.tsbuildinfo
+work/
+outputs/
+.DS_Store
+Thumbs.db
